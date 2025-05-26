@@ -5,7 +5,7 @@
 *.so
 *.dylib
 
-# Test binary, build with `go test -c`
+# Test binary, built with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
@@ -13,6 +13,9 @@
 
 # custom
 .env
+.vscode
+.idea
+log
 
 # built server
 build
@@ -20,3 +23,10 @@ swapdoodle
 
 # logs
 log/*
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
