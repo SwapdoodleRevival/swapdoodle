@@ -18,10 +18,9 @@ func GetNotificationURL(err error, packet nex.PacketInterface, callID uint32, pa
 		return nil, nex.NewError(nex.ResultCodes.DataStore.Unknown, err.Error())
 	}
 
-	bucket := globals.DatastoreCommon.S3Bucket
 	key := globals.S3GetNotificationKey(packet.Sender().PID())
 
-	url, err := globals.DatastoreCommon.S3Presigner.GetObject(bucket, key, time.Hour*24*7)
+	get, err := globals.S3.PresignGet(key, time.Hour*24*7)
 	if err != nil {
 		globals.Logger.Error(err.Error())
 		return nil, nex.NewError(nex.ResultCodes.DataStore.OperationNotAllowed, "change_error")
@@ -31,9 +30,9 @@ func GetNotificationURL(err error, packet nex.PacketInterface, callID uint32, pa
 
 	urlInfo := datastore_types.NewDataStoreReqGetNotificationURLInfo()
 
-	urlInfo.URL = types.NewString(fmt.Sprintf("%s://%s/", url.Scheme, url.Host))
-	urlInfo.Key = types.NewString(strings.TrimPrefix(url.Path, "/"))
-	urlInfo.Query = types.NewString(fmt.Sprintf("?%s", url.Query().Encode()))
+	urlInfo.URL = types.NewString(fmt.Sprintf("%s://%s/", get.URL.Scheme, get.URL.Host))
+	urlInfo.Key = types.NewString(strings.TrimPrefix(get.URL.Path, "/"))
+	urlInfo.Query = types.NewString(fmt.Sprintf("?%s", get.URL.Query().Encode()))
 	urlInfo.RootCACert = types.NewBuffer(nil)
 
 	urlInfo.WriteTo(resStream)

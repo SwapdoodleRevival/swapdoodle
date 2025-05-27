@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	pb "github.com/PretendoNetwork/grpc/go/account"
+	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
 	"github.com/PretendoNetwork/plogger-go"
 	"github.com/joho/godotenv"
 	"github.com/silver-volt4/swapdoodle/database"
@@ -36,6 +37,7 @@ func init() {
 	s3AccessKey := os.Getenv("PN_SD_CONFIG_S3_ACCESS_KEY")
 	s3AccessSecret := os.Getenv("PN_SD_CONFIG_S3_ACCESS_SECRET")
 	s3SecureEnv := os.Getenv("PN_SD_CONFIG_S3_SECURE")
+	s3Bucket := os.Getenv("PN_SD_CONFIG_S3_BUCKET")
 
 	postgresURI := os.Getenv("PN_SD_POSTGRES_URI")
 	hppServerPort := os.Getenv("PN_SD_HPP_SERVER_PORT")
@@ -118,12 +120,17 @@ func init() {
 		Secure: s3Secure,
 	})
 	if err != nil {
-		panic(err)
+		globals.Logger.Criticalf("Failed to connect to initialize minIOClient: %v", err)
+		os.Exit(0)
 	}
 
 	globals.MinIOClient = minIOClient
-	globals.Presigner = globals.NewS3Presigner(globals.MinIOClient)
 
-	// * Connect to and setup databases
-	database.ConnectPostgres()
+	database.ConnectPostgres(postgresURI)
+
+	globals.S3 = &common_globals.S3{
+		Bucket:    s3Bucket,
+		KeyBase:   "ds",
+		Presigner: globals.NewS3Presigner(globals.MinIOClient),
+	}
 }

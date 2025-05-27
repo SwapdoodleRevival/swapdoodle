@@ -5,42 +5,60 @@ import (
 	"net/url"
 	"time"
 
+	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
 	"github.com/minio/minio-go/v7"
 )
 
-type S3Presigner struct {
-	minio *minio.Client
-}
+type S3Presigner struct{}
 
-func (p *S3Presigner) GetObject(bucket, key string, lifetime time.Duration) (*url.URL, error) {
+func (S3Presigner) GetObject(bucket, key string, lifetime time.Duration) (*common_globals.S3GetObjectData, error) {
 	reqParams := make(url.Values)
 
-	return p.minio.PresignedGetObject(context.Background(), bucket, key, lifetime, reqParams)
+	url, err := MinIOClient.PresignedGetObject(context.Background(), bucket, key, lifetime, reqParams)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := S3StatObject(bucket, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common_globals.S3GetObjectData{
+		URL:  url,
+		Size: uint32(stat.Size),
+	}, nil
 }
 
-func (p *S3Presigner) PostObject(bucket, key string, lifetime time.Duration) (*url.URL, map[string]string, error) {
+func (S3Presigner) PostObject(bucket, key string, lifetime time.Duration) (*common_globals.S3PostObjectData, error) {
 	policy := minio.NewPostPolicy()
 
 	err := policy.SetBucket(bucket)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	err = policy.SetKey(key)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	err = policy.SetExpires(time.Now().UTC().Add(lifetime).UTC())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return p.minio.PresignedPostPolicy(context.Background(), policy)
+	url, formData, err := MinIOClient.PresignedPostPolicy(context.Background(), policy)
+	if err != nil {
+		return nil, err
+	}
+
+	return &common_globals.S3PostObjectData{
+		URL:      url,
+		FormData: formData,
+	}, nil
 }
 
-func NewS3Presigner(minioClient *minio.Client) *S3Presigner {
-	return &S3Presigner{
-		minio: minioClient,
-	}
+func NewS3Presigner(minioClient *minio.Client) S3Presigner {
+	return S3Presigner{}
 }
