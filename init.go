@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	pb "github.com/PretendoNetwork/grpc/go/account"
-	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
 	"github.com/PretendoNetwork/plogger-go"
 	"github.com/joho/godotenv"
 	"github.com/silver-volt4/swapdoodle/database"
@@ -126,11 +125,7 @@ func init() {
 
 	globals.MinIOClient = minIOClient
 
-	database.ConnectPostgres(postgresURI)
+	globals.S3BucketName = s3Bucket
 
-	globals.S3 = &common_globals.S3{
-		Bucket:    s3Bucket,
-		KeyBase:   "ds",
-		Presigner: globals.NewS3Presigner(globals.MinIOClient),
-	}
+	database.ConnectPostgres(postgresURI)
 }

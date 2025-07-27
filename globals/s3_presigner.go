@@ -3,6 +3,7 @@ package globals
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
@@ -57,6 +58,12 @@ func (S3Presigner) PostObject(bucket, key string, lifetime time.Duration) (*comm
 		URL:      url,
 		FormData: formData,
 	}, nil
+}
+
+func (S3Presigner) PutObject(bucket, key string, content string) error {
+	MinIOClient.PutObject(context.TODO(), bucket, key, strings.NewReader(content), int64(len(content)), minio.PutObjectOptions{})
+	_, err := MinIOClient.StatObject(context.TODO(), bucket, key, minio.StatObjectOptions{})
+	return err
 }
 
 func NewS3Presigner(minioClient *minio.Client) S3Presigner {
