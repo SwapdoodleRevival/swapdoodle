@@ -12,7 +12,6 @@ import (
 
 const HPP_ACCESS_KEY = "76f26496"
 const S3_KEY_DATASTORE = "ds"
-const S3_KEY_DATASTORE_NOTIFY = "notifications"
 
 var MinIOClient *minio.Client
 

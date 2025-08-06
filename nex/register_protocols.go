@@ -34,13 +34,9 @@ func registerProtocols() {
 		database.Postgres,
 	)
 
-	presigner := globals.NewS3Presigner(globals.MinIOClient)
-	dsm.SetS3Config(globals.S3BucketName, globals.S3_KEY_DATASTORE, globals.S3_KEY_DATASTORE_NOTIFY, presigner)
+	manager := globals.NewS3Manager(globals.MinIOClient)
+	dsm.SetS3Config(globals.S3BucketName, globals.S3_KEY_DATASTORE, manager)
 	dsm.VerifyObjectAccessPermission = datastore_db.VerifyReadAccessByDataIdAndPID
 
 	globals.DatastoreCommon.SetManager(dsm)
-
-	// The datastore DB schema is created immediately after SetManager is called.
-	// Since notifications have not been implemented yet, I'm keeping the old DB around
-	database.InitNotificationTable()
 }
