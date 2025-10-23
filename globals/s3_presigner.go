@@ -3,15 +3,16 @@ package globals
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
 	"github.com/minio/minio-go/v7"
 )
 
-type S3Presigner struct{}
+type S3Manager struct{}
 
-func (S3Presigner) GetObject(bucket, key string, lifetime time.Duration) (*common_globals.S3GetObjectData, error) {
+func (S3Manager) PresignGetObject(bucket, key string, lifetime time.Duration) (*common_globals.S3GetObjectData, error) {
 	reqParams := make(url.Values)
 
 	url, err := MinIOClient.PresignedGetObject(context.Background(), bucket, key, lifetime, reqParams)
@@ -30,7 +31,7 @@ func (S3Presigner) GetObject(bucket, key string, lifetime time.Duration) (*commo
 	}, nil
 }
 
-func (S3Presigner) PostObject(bucket, key string, lifetime time.Duration) (*common_globals.S3PostObjectData, error) {
+func (S3Manager) PresignPostObject(bucket, key string, lifetime time.Duration) (*common_globals.S3PostObjectData, error) {
 	policy := minio.NewPostPolicy()
 
 	err := policy.SetBucket(bucket)
@@ -59,6 +60,12 @@ func (S3Presigner) PostObject(bucket, key string, lifetime time.Duration) (*comm
 	}, nil
 }
 
-func NewS3Presigner(minioClient *minio.Client) S3Presigner {
-	return S3Presigner{}
+func (S3Manager) PutObject(bucket, key string, content string) error {
+	MinIOClient.PutObject(context.TODO(), bucket, key, strings.NewReader(content), int64(len(content)), minio.PutObjectOptions{})
+	_, err := MinIOClient.StatObject(context.TODO(), bucket, key, minio.StatObjectOptions{})
+	return err
+}
+
+func NewS3Manager(minioClient *minio.Client) S3Manager {
+	return S3Manager{}
 }

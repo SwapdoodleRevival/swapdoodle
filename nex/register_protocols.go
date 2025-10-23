@@ -10,7 +10,6 @@ import (
 	"github.com/silver-volt4/swapdoodle/database"
 	datastore_db "github.com/silver-volt4/swapdoodle/database/datastore"
 	"github.com/silver-volt4/swapdoodle/globals"
-	nex_datastore_swapdoodle "github.com/silver-volt4/swapdoodle/nex/datastore/nex_datastore_swapdoodle"
 )
 
 func registerProtocols() {
@@ -24,8 +23,6 @@ func registerProtocols() {
 
 	// Register DataStore protocol
 	datastore := datastore.NewProtocol()
-	datastore.GetNotificationURL = nex_datastore_swapdoodle.GetNotificationURL
-	datastore.GetNewArrivedNotificationsV1 = nex_datastore_swapdoodle.GetNewArrivedNotificationsV1
 	globals.HppServer.RegisterServiceProtocol(datastore)
 
 	// Register Common DataStore protocol
@@ -36,13 +33,10 @@ func registerProtocols() {
 		nil,
 		database.Postgres,
 	)
-	dsm.SetS3Config(globals.S3.Bucket, globals.S3.KeyBase, globals.S3.Presigner)
+
+	manager := globals.NewS3Manager(globals.MinIOClient)
+	dsm.SetS3Config(globals.S3BucketName, globals.S3_KEY_DATASTORE, manager)
 	dsm.VerifyObjectAccessPermission = datastore_db.VerifyReadAccessByDataIdAndPID
 
 	globals.DatastoreCommon.SetManager(dsm)
-	globals.DatastoreCommon.OnAfterCompletePostObject = nex_datastore_swapdoodle.OnAfterCompletePostObject
-
-	// The datastore DB schema is created immediately after SetManager is called.
-	// Since notifications have not been implemented yet, I'm keeping the old DB around
-	database.InitNotificationTable()
 }
