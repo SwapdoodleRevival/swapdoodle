@@ -2,8 +2,6 @@ package nex
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 
 	"github.com/PretendoNetwork/nex-go/v2"
 	"github.com/silver-volt4/swapdoodle/globals"
@@ -28,7 +26,5 @@ func StartHppServer() {
 
 	registerProtocols()
 
-	port, _ := strconv.Atoi(os.Getenv("PN_SD_HPP_SERVER_PORT"))
-
-	globals.HppServer.Listen(port)
+	globals.HppServer.Listen(globals.HPPServerPort)
 }

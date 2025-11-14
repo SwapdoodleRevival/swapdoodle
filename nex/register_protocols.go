@@ -29,14 +29,14 @@ func registerProtocols() {
 	commonDataStoreProtocol := datastorecommon.NewCommonProtocol(datastore)
 	globals.DatastoreCommon = commonDataStoreProtocol
 
-	dsm := common_globals.NewDataStoreManager(
+	globals.DatastoreManager = common_globals.NewDataStoreManager(
 		nil,
 		database.Postgres,
 	)
 
 	manager := globals.NewS3Manager(globals.MinIOClient)
-	dsm.SetS3Config(globals.S3BucketName, globals.S3_KEY_DATASTORE, manager)
-	dsm.VerifyObjectAccessPermission = datastore_db.VerifyReadAccessByDataIdAndPID
+	globals.DatastoreManager.SetS3Config(globals.S3BucketName, globals.S3_KEY_DATASTORE, manager)
+	globals.DatastoreManager.VerifyObjectAccessPermission = datastore_db.VerifyReadAccessByDataIdAndPID
 
-	globals.DatastoreCommon.SetManager(dsm)
+	globals.DatastoreCommon.SetManager(globals.DatastoreManager)
 }

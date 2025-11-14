@@ -22,6 +22,20 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+func verifyPort(port string) (int, error) {
+	port = strings.TrimSpace(port)
+	if port == "" {
+		return 0, fmt.Errorf("Environment variable not set.")
+	}
+	result, err := strconv.Atoi(port)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid port. Expected 0-65535, got %s", port)
+	} else if result < 0 || result > 65535 {
+		return 0, fmt.Errorf("Invalid port. Expected 0-65535, got %s", port)
+	}
+	return result, nil
+}
+
 func init() {
 	globals.Logger = plogger.NewLogger()
 
@@ -40,6 +54,8 @@ func init() {
 
 	postgresURI := os.Getenv("PN_SD_POSTGRES_URI")
 	hppServerPort := os.Getenv("PN_SD_HPP_SERVER_PORT")
+	grpcServerPort := os.Getenv("PN_SD_GRPC_SERVER_PORT")
+	grpcApiKey := os.Getenv("PN_SD_CONFIG_GRPC_API_KEY")
 	accountGRPCHost := os.Getenv("PN_SD_ACCOUNT_GRPC_HOST")
 	accountGRPCPort := os.Getenv("PN_SD_ACCOUNT_GRPC_PORT")
 	accountGRPCAPIKey := os.Getenv("PN_SD_ACCOUNT_GRPC_API_KEY")
@@ -60,35 +76,21 @@ func init() {
 
 	globals.HppServerAccount = nex.NewAccount(2, "Quazal Rendez-Vous", globals.KerberosPassword)
 
-	if strings.TrimSpace(hppServerPort) == "" {
-		globals.Logger.Error("PN_SD_SECURE_SERVER_PORT environment variable not set")
+	globals.HPPServerPort, err = verifyPort(hppServerPort)
+	if err != nil {
+		globals.Logger.Errorf("Error in environment variable PN_SD_HPP_SERVER_PORT: %s", err.Error())
 		os.Exit(0)
 	}
 
-	if port, err := strconv.Atoi(hppServerPort); err != nil {
-		globals.Logger.Errorf("PN_SD_SECURE_SERVER_PORT is not a valid port. Expected 0-65535, got %s", hppServerPort)
-		os.Exit(0)
-	} else if port < 0 || port > 65535 {
-		globals.Logger.Errorf("PN_SD_SECURE_SERVER_PORT is not a valid port. Expected 0-65535, got %s", hppServerPort)
+	globals.GRPCServerPort, err = verifyPort(grpcServerPort)
+	if err != nil {
+		globals.Logger.Errorf("Error in environment variable PN_SD_GRPC_SERVER_PORT: %s", err.Error())
 		os.Exit(0)
 	}
 
-	if strings.TrimSpace(accountGRPCHost) == "" {
-		globals.Logger.Error("PN_SD_ACCOUNT_GRPC_HOST environment variable not set")
-		os.Exit(0)
-	}
-
-	if strings.TrimSpace(accountGRPCPort) == "" {
-		globals.Logger.Error("PN_SD_ACCOUNT_GRPC_PORT environment variable not set")
-		os.Exit(0)
-	}
-
-	if port, err := strconv.Atoi(accountGRPCPort); err != nil {
-		globals.Logger.Errorf("PN_SD_ACCOUNT_GRPC_PORT is not a valid port. Expected 0-65535, got %s", accountGRPCPort)
-		os.Exit(0)
-	} else if port < 0 || port > 65535 {
-		globals.Logger.Errorf("PN_SD_ACCOUNT_GRPC_PORT is not a valid port. Expected 0-65535, got %s", accountGRPCPort)
-		os.Exit(0)
+	globals.GRPCApiKey = strings.TrimSpace(grpcApiKey)
+	if globals.GRPCApiKey == "" {
+		globals.Logger.Warning("PN_SD_CONFIG_GRPC_API_KEY is not set. Your gRPC server will be open.")
 	}
 
 	if strings.TrimSpace(accountGRPCAPIKey) == "" {
