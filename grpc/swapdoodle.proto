@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package swapdoodle;
+
+option go_package = "./;grpc";
+
+message GetPresignedUrlForReportIdRequest {
+  string noteId = 1;
+}
+
+message GetPresignedUrlForReportIdResponse {
+  string url = 1;
+}
+
+service Swapdoodle {
+	rpc GetPresignedUrlForReportId(GetPresignedUrlForReportIdRequest) returns (GetPresignedUrlForReportIdResponse) {}
+}
